@@ -1,5 +1,7 @@
 import requests
 
+# Takes an API key and returns the source-id of the merchant
+
 
 def find_merchant_main(key):
     credential = "9A8D7D72-858D-44FF-A7F2-9BB06118BDF6"

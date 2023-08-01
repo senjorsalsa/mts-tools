@@ -1,12 +1,12 @@
-# TODO
-# Handle orders that are "Picked"
-# Any orders that are not successfully cancelled or returned, save and print
-
 import requests
 import os
 from tkinter import filedialog
 import openpyxl as xl
 import time
+import PySimpleGUI as sg
+
+# Takes an order report and an API key and kills all orders in the report,
+# doesn't matter if they are Pending, Picked or Invoiced.
 
 
 def kill_order_main(api_key):
@@ -29,9 +29,9 @@ def kill_order_main(api_key):
             problem_orders.append(order)
             continue
 
-        # if json_response["OrderDetails"]["OrderRows"][0].get("PickedQuantity") is None:
-        #     orders_picked.append(json_response["OrderDetails"]["OrderId"])
-        #     continue
+        if json_response["OrderDetails"]["OrderRows"][0].get("PickedQuantity") is not None:
+            orders_picked.append(json_response["OrderDetails"]["OrderId"])
+            continue
 
         if json_response["OrderDetails"].get("State") == "Pending":
             orders_to_cancel.append(create_cancel_payload(json_response))
@@ -43,13 +43,20 @@ def kill_order_main(api_key):
             continue
 
     if len(orders_to_cancel) != 0:
+        print(f"Amount of orders to cancel: {len(orders_to_cancel)}")
+        input("Press ENTER to continue")
         send_cancel_request(orders_to_cancel, headers)
 
     if len(orders_to_return) != 0:
+        print(f"Amount of orders to return: {len(orders_to_return)}")
+        input("Press ENTER to continue")
         send_return_request(orders_to_return, headers)
 
-    # if len(orders_picked) != 0:
-    #     handle_picked_orders(orders_picked, api_key, headers)
+    if len(orders_picked) != 0:
+        print(f"Some orders had \"Picked\" status. Amount: {len(orders_picked)}")
+        print("Must mark these as delivered before marking as returned (cancel not possible with this status)")
+        input("Press ENTER to continue")
+        handle_picked_orders(orders_picked, api_key, headers)
 
     if len(problem_orders) != 0:
         print("\nThere were issues with some orders, they were not found when fetching")
@@ -57,16 +64,37 @@ def kill_order_main(api_key):
 
 
 def parse_orders_to_kill():
-    cwd = os.getcwd()
-    order_excel = xl.load_workbook(filedialog.askopenfilename(initialdir=cwd))
-    ws = order_excel.worksheets[0]
-    order_list = []
+    button_clicked = open_popup()
+    if button_clicked == 'order_report':
+        cwd = os.getcwd()
+        order_excel = xl.load_workbook(filedialog.askopenfilename(initialdir=cwd))
+        ws = order_excel.worksheets[0]
+        order_list = []
 
-    for row in range(2, ws.max_row + 1):
-        position = ws.cell(row, 1)
-        order_list.append(position.value)
+        for row in range(2, ws.max_row + 1):
+            position = ws.cell(row, 1)
+            order_list.append(position.value)
 
-    return order_list
+        return order_list
+    elif button_clicked == 'fetch_api':
+        print("Not implemented")
+
+
+def open_popup():
+    layout = [
+        [sg.Text('Click a button')],
+        [sg.Button('Get orders from Excel file', key='order_report'), sg.Button('Get orders from API', key='fetch_api')]
+    ]
+
+    window = sg.Window('Popup Window', layout, modal=True)
+
+    while True:
+        event, _ = window.read()
+        if event in (sg.WINDOW_CLOSED, 'order_report', 'fetch_api'):
+            break
+
+    window.close()
+    return event
 
 
 def fetch_order_from_api(order, h):
@@ -152,7 +180,7 @@ def send_return_request(payload_list, h):
 
 def send_deliver_request(payload, h):
     for bit in payload:
-        response = requests.post(url="https://integration-admin.marketplace.cdon.com/api/orderdelivery",
+        response = requests.post(url="https://admin.marketplace.cdon.com/api/orderdelivery",
                                  json=bit, headers=h)
         print(f"\nSent delivery request for order {bit.get('OrderId')}")
 
@@ -163,15 +191,15 @@ def send_deliver_request(payload, h):
             print(f"Request was successful, status code: {response.status_code}")
 
 
-# def handle_picked_orders(orders, key, h):
-#     orders_to_return_json_list = []
-#     orders_to_deliver_json_list = []
-#
-#     for order in orders:
-#         json_response = fetch_order_from_api(order, h)
-#         orders_to_deliver_json_list.append(create_deliver_payload(json_response))
-#         orders_to_return_json_list.append(create_return_payload(json_response))
-#
-#     send_deliver_request(orders_to_deliver_json_list, h)
-#     time.sleep(0.1)
-#     send_return_request(orders_to_return_json_list, h)
+def handle_picked_orders(orders, key, h):
+    orders_to_return_json_list = []
+    orders_to_deliver_json_list = []
+
+    for order in orders:
+        json_response = fetch_order_from_api(order, h)
+        orders_to_deliver_json_list.append(create_deliver_payload(json_response))
+        orders_to_return_json_list.append(create_return_payload(json_response))
+
+    send_deliver_request(orders_to_deliver_json_list, h)
+    time.sleep(0.1)
+    send_return_request(orders_to_return_json_list, h)

@@ -3,6 +3,8 @@ import json
 import os
 import xml.etree.cElementTree as et
 
+# Creates price.xml from a merchants inventory report in json format
+
 
 def price_import_main():
     cwd = os.getcwd()
