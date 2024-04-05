@@ -5,6 +5,7 @@ import os
 import PySimpleGUI as sg
 from tkinter import filedialog
 
+
 # Create availability.xml with dynamic delivery times
 
 
@@ -23,36 +24,27 @@ def custom_availability_main():
     maximum = values[1]
     cwd = os.getcwd()
 
-    products = get_merchant_products_xl(cwd, minimum, maximum)
+    products = parse_product_data(minimum, maximum)
     create_xml(products)
 
 
-def get_merchant_products_xl(cwd, minimum, maximum):
-    products = []
-    workbook = xl.load_workbook(filedialog.askopenfilename(initialdir=cwd))
-    worksheet = workbook.worksheets[0]
+def parse_product_data(minimum, maximum):
+    product_list = []
 
-    with open(filedialog.askopenfilename(initialdir=cwd), encoding="utf-8") as json_report:
+    with open(filedialog.askopenfilename(initialdir="C:\\Users\\victrosb\\Downloads"), encoding="utf-8") as json_report:
         json_data = json.load(json_report)
 
-    for row in range(2, worksheet.max_row + 1):
-        position = worksheet.cell(row, 1)
-        bit = {}
+    for product in json_data["Products"]:
+        curr_product = {"SKU": str(product.get("SKU")),
+                        "deliveryTimes": {"minimum": str(minimum), "maximum": str(maximum)},
+                        "status": {"sweden": product.get("StatusSe"),
+                                   "denmark": product.get("StatusDk"),
+                                   "norway": product.get("StatusNo"),
+                                   "finland": product.get("StatusFi")},
+                        "stock": str(product.get("Stock"))}
+        product_list.append(curr_product)
 
-        for product_dict in json_data["Products"]:
-            if product_dict["CdonProductId"] == position.value:
-                bit["sku"] = product_dict["SKU"]
-                bit["minimum"] = worksheet.cell(row, 5).value
-                bit["maximum"] = worksheet.cell(row, 6).value
-                bit["status"] = worksheet.cell(row, 4).value
-                if bit["status"] == "Offline":
-                    bit["stock"] = 0
-                else:
-                    bit["stock"] = product_dict["Stock"]
-                products.append(bit)
-                break
-
-    return products
+    return product_list
 
 
 def create_xml(products):
@@ -62,14 +54,32 @@ def create_xml(products):
     i = 0
     for product in products:
         product_element = et.SubElement(marketplace, "product")
-        et.SubElement(product_element, "id").text = str(product["sku"])
+        et.SubElement(product_element, "id").text = str(product["SKU"])
         et.SubElement(product_element, "stock").text = str(product["stock"])
-        se = et.SubElement(product_element, "se")
-        # et.SubElement(se, "status").text = str(product.get("StatusSe"))
-        et.SubElement(se, "status").text = product["status"]
-        delivery_time = et.SubElement(se, "deliveryTime")
-        et.SubElement(delivery_time, "min").text = str(product["minimum"])
-        et.SubElement(delivery_time, "max").text = str(product["maximum"])
+        if product["status"].get("sweden") == "Online":
+            se = et.SubElement(product_element, "se")
+            et.SubElement(se, "status").text = "Online"
+            delivery_time = et.SubElement(se, "deliveryTime")
+            et.SubElement(delivery_time, "min").text = str(product["deliveryTimes"].get("minimum"))
+            et.SubElement(delivery_time, "max").text = str(product["deliveryTimes"].get("maximum"))
+        if product["status"].get("denmark") == "Online":
+            dk = et.SubElement(product_element, "dk")
+            et.SubElement(dk, "status").text = "Online"
+            delivery_time = et.SubElement(dk, "deliveryTime")
+            et.SubElement(delivery_time, "min").text = str(product["deliveryTimes"].get("minimum"))
+            et.SubElement(delivery_time, "max").text = str(product["deliveryTimes"].get("maximum"))
+        if product["status"].get("norway") == "Online":
+            no = et.SubElement(product_element, "no")
+            et.SubElement(no, "status").text = "Online"
+            delivery_time = et.SubElement(no, "deliveryTime")
+            et.SubElement(delivery_time, "min").text = str(product["deliveryTimes"].get("minimum"))
+            et.SubElement(delivery_time, "max").text = str(product["deliveryTimes"].get("maximum"))
+        if product["status"].get("finland") == "Online":
+            fi = et.SubElement(product_element, "fi")
+            et.SubElement(fi, "status").text = "Online"
+            delivery_time = et.SubElement(fi, "deliveryTime")
+            et.SubElement(delivery_time, "min").text = str(product["deliveryTimes"].get("minimum"))
+            et.SubElement(delivery_time, "max").text = str(product["deliveryTimes"].get("maximum"))
         i += 1
     tree = et.ElementTree(marketplace)
     tree.write("availability_kristinas_online.xml", encoding="utf-8", xml_declaration=True)

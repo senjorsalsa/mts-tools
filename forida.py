@@ -1,61 +1,36 @@
 import openpyxl as xl
-import json
 from tkinter import filedialog
-import os
 import xml.etree.ElementTree as et
 
 
 def idas_main():
-    cwd = os.getcwd()
-    workbook = get_workbook(cwd)
-    orders = get_orders_from_excel(workbook)
-    inventory_report_json = get_inventory_report(cwd)
-    work_magic(orders, inventory_report_json)
+    product_excel = xl.load_workbook(filedialog.askopenfilename(initialdir="C:\\Users\\victrosb\\Downloads"))
+    ws = product_excel.worksheets[0]
 
+    sku_list = [ws.cell(row, 1).value for row in range(2, ws.max_row + 1)]
 
-def get_workbook(cwd):
-    workbook = xl.load_workbook(filedialog.askopenfilename(initialdir=cwd))
-    return workbook
-
-
-def get_orders_from_excel(workbook):
-    orders = []
-    worksheet = workbook.worksheets[0]
-
-    for row in range(2, worksheet.max_row + 1):
-        orders.append({"OrderId": worksheet[f"A{row}"].value, "Price": worksheet[f"B{row}"].value})
-
-    return orders
-
-
-def get_inventory_report(cwd):
-    json_file = open(filedialog.askopenfilename(initialdir=cwd))
-    json_data = json.load(json_file)
-    json_file.close()
-
-    return json_data
-
-
-def work_magic(orders, json_orders):
-    namespace = "https://schemas.cdon.com/product/4.0/4.9.0/price"
+    namespace = "https://schemas.cdon.com/product/4.0/4.12.1/availability"
     marketplace = et.Element("marketplace", xmlns=namespace)
-    for order in orders:
-        for inv_order in json_orders['Products']:
-            if inv_order["CdonProductId"] != order["OrderId"]:
-                continue
 
-            product_element = et.SubElement(marketplace, "product")
-            et.SubElement(product_element, "id").text = inv_order["SKU"]
-            if inv_order.get("StatusSe") != "":
-                se = et.SubElement(product_element, "se")
-                et.SubElement(se, "salePrice").text = str(order.get("Price"))
-                et.SubElement(se, "originalPrice").text = str(order.get("Price"))
-                if inv_order.get("IsShippedFromEUSe"):
-                    et.SubElement(se, "isShippedFromEU").text = "true"
-                else:
-                    et.SubElement(se, "isShippedFromEU").text = "false"
-                et.SubElement(se, "shippingCost").text = str(inv_order.get("ShippingCostSe"))
-                et.SubElement(se, "vat").text = str(inv_order.get("VatSe"))
+    for product in sku_list:
+        product_element = et.SubElement(marketplace, "product")
+        et.SubElement(product_element, "id").text = str(product)
+        et.SubElement(product_element, "stock").text = "0"
+
+        se = et.SubElement(product_element, "se")
+        et.SubElement(se, "status").text = "Offline"
+        delivery_time = et.SubElement(se, "deliveryTime")
+        et.SubElement(delivery_time, "min").text = "1"
+        et.SubElement(delivery_time, "max").text = "3"
+
+    filename = input("Enter the filename to save: ")
+    if not filename.endswith(".xml"):
+        filename += ".xml"
 
     tree = et.ElementTree(marketplace)
-    tree.write("price.xml", encoding="utf-8", xml_declaration=True)
+    tree.write(filename, encoding="utf-8", xml_declaration=True)
+
+
+
+
+idas_main()

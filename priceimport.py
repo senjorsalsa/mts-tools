@@ -1,20 +1,18 @@
 from tkinter import filedialog
 import json
-import os
 import xml.etree.cElementTree as et
 
 # Creates price.xml from a merchants inventory report in json format
 
 
 def price_import_main():
-    cwd = os.getcwd()
-    json_content = get_json_from_report(cwd)
+    json_content = get_json_from_report()
     products_amount = build_price_xml(json_content)
     return products_amount
 
 
-def get_json_from_report(cwd):
-    json_inventory = open(filedialog.askopenfilename(initialdir=cwd), 'r', encoding="utf-8")
+def get_json_from_report():
+    json_inventory = open(filedialog.askopenfilename(initialdir="C:\\Users\\victrosb\\Downloads"), 'r', encoding="utf-8")
     json_content = json.load(json_inventory)
     json_inventory.close()
     return json_content
@@ -32,11 +30,13 @@ def build_price_xml(data):
             se = et.SubElement(product_element, "se")
             et.SubElement(se, "salePrice").text = str(product.get("SalePriceSe"))
             et.SubElement(se, "originalPrice").text = str(product.get("OriginalPriceSe"))
-            if product.get("IsShippedFromEUSe"):
-                et.SubElement(se, "isShippedFromEU").text = "true"
-            else:
-                et.SubElement(se, "isShippedFromEU").text = "false"
-            et.SubElement(se, "shippingCost").text = str(product.get("ShippingCostSe"))
+            et.SubElement(se, "isShippedFromEU").text = "true"
+            # if product.get("IsShippedFromEUSe"):
+            #     et.SubElement(se, "isShippedFromEU").text = "true"
+            # else:
+            #     et.SubElement(se, "isShippedFromEU").text = "false"
+            # et.SubElement(se, "shippingCost").text = str(product.get("ShippingCostSe"))
+            et.SubElement(se, "shippingCost").text = "19"
             et.SubElement(se, "vat").text = str(product.get("VatSe"))
 
         if product.get("StatusDk") != "":

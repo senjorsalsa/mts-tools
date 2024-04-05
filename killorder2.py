@@ -7,22 +7,8 @@ from tkinter import filedialog
 import time
 
 
-
 def kill_order_2_main():
-    api_key = ''
-    layout = [
-        [sg.Text('Enter API Key:')],
-        [sg.InputText()],
-        [sg.Button('OK')]
-    ]
-    window = sg.Window('Popup Window', layout)
-    while True:
-        event, values = window.read()
-        if event == sg.WINDOW_CLOSED:
-            break
-        elif event == 'OK':
-            api_key = values[0]
-            break
+    api_key = sg.popup_get_text("API key")
     json_data = get_orders_from_api(api_key)
     parse_orders(json_data)
 

@@ -22,7 +22,6 @@ def price_main():
 
     inventory_report_file = open_json_file()
     import_file = open_xml_file()
-    # print(import_file)
     compare_prices(inventory_report_file, import_file)
 
 
@@ -41,8 +40,6 @@ def open_xml_file():
 
 
 def compare_prices(inventory_file, import_file):
-    incorrect_prices_sku = []
-
     for product in import_file['marketplace']['product']:
         product_id = product.get('id')
         sale_price_from_import = int(float(product['se'].get('salePrice')))
