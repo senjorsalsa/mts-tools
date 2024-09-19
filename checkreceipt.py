@@ -19,16 +19,15 @@ def checkreceipt_main():
         if event == sg.WINDOW_CLOSED:
             break
         if event == "-SUBMIT-":
-            receipt_ids = parse_receipt_ids(values)
-            make_requests(receipt_ids, values)
+            receipt_ids = parse_receipt_ids(values['-INPUT-'])
+            make_requests(receipt_ids, values['-APIKEY-'])
 
 
 def parse_receipt_ids(values):
-    return [d for d in values.get("-INPUT-").split('\n')]
+    return [d for d in values.split('\n')]
 
 
-def make_requests(receipts, values):
-    api_key = values.get("-APIKEY-")
+def make_requests(receipts, api_key):
     url = "https://mis.cdon.com/deliveries/"
     headers = {
         "Authorization": f"api {api_key}"
@@ -40,6 +39,7 @@ def make_requests(receipts, values):
         receipt_responses.append(response.json())
 
     for x in receipt_responses:
-        print(f"{x.get('receiptId')} - {x.get('endPoint')}\nStatus: {x.get('status')}\n")
+        print(f"{x['receiptId']} - {x['endPoint']}\nStatus: {x['status']}\n")
+
 
 checkreceipt_main()

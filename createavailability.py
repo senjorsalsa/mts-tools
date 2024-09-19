@@ -6,7 +6,7 @@ import PySimpleGUI as sg
 from tkinter import filedialog
 
 
-# Create availability.xml with dynamic delivery times
+# Create availability.xml with delivery times of your choosing
 
 
 def custom_availability_main():
@@ -82,6 +82,6 @@ def create_xml(products):
             et.SubElement(delivery_time, "max").text = str(product["deliveryTimes"].get("maximum"))
         i += 1
     tree = et.ElementTree(marketplace)
-    tree.write("availability_kristinas_online.xml", encoding="utf-8", xml_declaration=True)
+    tree.write("availability.xml", encoding="utf-8", xml_declaration=True)
     print("The Availability file was completed")
     print(f"Amount of products in file: {i}")

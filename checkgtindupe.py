@@ -3,7 +3,8 @@ import PySimpleGUI as sg
 import openpyxl as xl
 from tkinter import filedialog
 
-# checks an inventory report and marks any GTIN that appears twice
+# checks a JSON inventory report and marks any GTIN that appears twice
+
 
 def gtin_main():
     layout = [[sg.Text('Choose if the inventory report is Excel or JSON format')],
@@ -44,10 +45,11 @@ def file_json_check():
     for product in json_content["Products"]:
         gtin = product.get("Gtin")
         if gtin in gtin_list and gtin is not None:
-            duplicate.append({"gtin": gtin, "sku": product.get("SKU"), "product status": {"sweden": product.get("StatusSe"),
-                                                                                          "denmark": product.get("StatusDk"),
-                                                                                          "norway": product.get("StatusNo"),
-                                                                                          "finland": product.get("StatusFi")}})
+            duplicate.append({"gtin": gtin, "sku": product.get("SKU"),
+                              "product status": {"sweden": product.get("StatusSe"),
+                                                 "denmark": product.get("StatusDk"),
+                                                 "norway": product.get("StatusNo"),
+                                                 "finland": product.get("StatusFi")}})
         else:
             gtin_list.append(gtin)
 

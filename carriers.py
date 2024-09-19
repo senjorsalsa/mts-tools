@@ -1,10 +1,16 @@
+import os
+
 import requests
 import pandas as pd
 import PySimpleGUI as sg
+from dotenv import load_dotenv
 
 # fetch package carriers and save to file
+
+
 def carriers_main():
-    h = {"Authorization": "api 3895a4ee-6f7a-4510-9422-e8a56de4e841"}
+    load_dotenv("credentials.env")
+    h = {"Authorization": f"api {os.getenv('API_KEY_FOR_CARRIERS')}"}
     url = "https://admin.marketplace.cdon.com/api/packagecarrier"
     response = requests.get(url=url, headers=h)
     response_json = response.json()

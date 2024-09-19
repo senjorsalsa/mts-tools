@@ -59,15 +59,14 @@ kill_order_tab = [
 
 layout = [
     [sg.TabGroup([
-        [sg.Tab("Kill orders", kill_order_tab),
-         sg.Tab("Import shenanigans", import_file_tab),
-         sg.Tab("Other", other_tab)]
+        [sg.Tab("Import shenanigans", import_file_tab),
+         sg.Tab("Other", other_tab),
+         sg.Tab("Kill orders", kill_order_tab)]
     ])],
     [sg.Button("Exit")]
 ]
 
 window = sg.Window("Tech support small toolz", layout)
-
 while True:
     event, values = window.read()
 

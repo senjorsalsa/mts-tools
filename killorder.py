@@ -22,7 +22,7 @@ def kill_order_main():
     problem_orders = []
 
     for order in order_list_to_kill:
-        json_response = fetch_order_from_api(order, headers)
+        json_response = fetch_order_from_api(order)
 
         if json_response is None:
             problem_orders.append(order)
@@ -55,7 +55,7 @@ def kill_order_main():
         print(f"Some orders had \"Picked\" status. Amount: {len(orders_picked)}")
         print("Must mark these as delivered before marking as returned (cancel not possible with this status)")
         input("Press ENTER to continue")
-        handle_picked_orders(orders_picked, api_key, headers)
+        handle_picked_orders(orders_picked, headers)
 
     if len(problem_orders) > 0:
         print("\nThere were issues with some orders, they were not found when fetching")
@@ -126,44 +126,54 @@ def fetch_order_from_api(order):
 
 
 def create_cancel_payload(json_data):
-    payload_bit = initialize_payload_bit_cancel(json_data["OrderDetails"].get("OrderId"))
+    payload_bit = initialize_payload_bit(json_data["OrderDetails"].get("OrderId"), "Rows")
     for row in json_data["OrderDetails"]["OrderRows"]:
-        payload_bit["Rows"].append(get_cancel_rows(row))
+        payload_bit["Rows"].append(get_rows(row, "Cancel"))
     return payload_bit
 
 
 def create_return_payload(json_data):
-    payload_bit = initialize_payload_bit_return(json_data["OrderDetails"].get("OrderId"))
+    payload_bit = initialize_payload_bit(json_data["OrderDetails"].get("OrderId"), "Products")
     for row in json_data["OrderDetails"]["OrderRows"]:
-        payload_bit["Products"].append(get_return_rows(row))
+        payload_bit["Products"].append(get_rows(row, "Return"))
     return payload_bit
 
 
 def create_deliver_payload(json_data):
-    payload_bit = initialize_payload_bit_return(json_data["OrderDetails"].get("OrderId"))
+    payload_bit = initialize_payload_bit(json_data["OrderDetails"].get("OrderId"), "Products")
     for row in json_data["OrderDetails"]["OrderRows"]:
-        payload_bit["Products"].append(get_deliver_rows(row))
+        payload_bit["Products"].append(get_rows(row, "Deliver"))
     return payload_bit
 
 
-def initialize_payload_bit_cancel(order):
-    return {"OrderId": f"{order}", "Rows": []}
+# More dynamic function, rather than two separate.
+def initialize_payload_bit(order, method):
+    return {"OrderId": f"{order}", f"{method}": []}
 
 
-def initialize_payload_bit_return(order):
-    return {"OrderId": f"{order}", "Products": []}
+# def initialize_payload_bit_cancel(order):
+#     return {"OrderId": f"{order}", "Rows": []}
+#
+#
+# def initialize_payload_bit_return(order):
+#     return {"OrderId": f"{order}", "Products": []}
 
 
-def get_cancel_rows(row):
-    return {"OrderRowId": row.get("OrderRowId"), "QuantityToCancel": row.get("Quantity")}
+# More dynamic than the three previous get_rows functions.
+def get_rows(row, method):
+    return {"OrderRowId": row["OrderRowId"], f"QuantityTo{method}": row["Quantity"]}
 
 
-def get_return_rows(row):
-    return {"OrderRowId": row.get("OrderRowId"), "QuantityToReturn": row.get("Quantity")}
-
-
-def get_deliver_rows(row):
-    return {"OrderRowId": row.get("OrderRowId"), "QuantityToDeliver": row.get("Quantity")}
+# def get_cancel_rows(row):
+#     return {"OrderRowId": row.get("OrderRowId"), "QuantityToCancel": row.get("Quantity")}
+#
+#
+# def get_return_rows(row):
+#     return {"OrderRowId": row.get("OrderRowId"), "QuantityToReturn": row.get("Quantity")}
+#
+#
+# def get_deliver_rows(row):
+#     return {"OrderRowId": row.get("OrderRowId"), "QuantityToDeliver": row.get("Quantity")}
 
 
 def send_cancel_request(payload_list, h):
@@ -211,12 +221,12 @@ def send_deliver_request(payload, h):
             print(f"Request was successful, status code: {response.status_code}")
 
 
-def handle_picked_orders(orders, key, h):
+def handle_picked_orders(orders, h):
     orders_to_return_json_list = []
     orders_to_deliver_json_list = []
 
     for order in orders:
-        json_response = fetch_order_from_api(order, h)
+        json_response = fetch_order_from_api(order)
         orders_to_deliver_json_list.append(create_deliver_payload(json_response))
         orders_to_return_json_list.append(create_return_payload(json_response))
 

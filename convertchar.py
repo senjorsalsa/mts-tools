@@ -1,12 +1,15 @@
 import PySimpleGUI as sg
 import html
 
+# Paste text you want to clean up, will change some HTML entities to their respective characters.
+
 
 def convert_main():
     layout = [
         [sg.Text("Paste Text Here:")],
         [sg.Multiline(key="input_text", size=(90, 10))],
         [sg.Button("Convert"), sg.Exit()],
+        [sg.Text("Converted text")],
         [sg.Multiline(size=(90, 10), key="output_text")]
     ]
 
@@ -20,7 +23,7 @@ def convert_main():
         elif event == "Convert":
             input_text = values["input_text"]
             converted_text = convert_text(input_text)
-            window["output_text"].update(f"Converted Text:\n{converted_text}")
+            window["output_text"].update(converted_text)
 
     window.close()
 
