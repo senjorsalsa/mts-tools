@@ -6,6 +6,7 @@ import PySimpleGUI as sg
 from tkinter import filedialog
 import time
 
+# NOT FINISHED
 
 def kill_order_2_main():
     api_key = sg.popup_get_text("API key")
