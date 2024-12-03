@@ -6,7 +6,7 @@ import PySimpleGUI as sg
 
 # Takes an order report and an API key and kills all orders in the report,
 # doesn't matter if they are Pending, Picked or Invoiced.
-# Able to fetch orders from API instead, but this will not cancel Picked or Invoiced orders, only Pending.
+# Able to fetch orders from API instead, but this will not cancel Picked or Invoiced orders, only Pending. !! THIS WAS NEVER FINISHED !!
 
 
 def kill_order_main():
