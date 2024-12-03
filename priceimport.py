@@ -12,7 +12,7 @@ def price_import_main():
 
 
 def get_json_from_report():
-    json_inventory = open(filedialog.askopenfilename(initialdir="C:\\Users\\victrosb\\Downloads"), 'r', encoding="utf-8")
+    json_inventory = open(filedialog.askopenfilename(), 'r', encoding="utf-8")
     json_content = json.load(json_inventory)
     json_inventory.close()
     return json_content
