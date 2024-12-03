@@ -3,6 +3,7 @@ import json
 import os
 from tkinter import filedialog
 
+# NOT FINISHED
 
 def product_main():
     json_inventory = get_json_inventory()
